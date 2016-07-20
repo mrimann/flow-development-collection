@@ -127,6 +127,51 @@ class TranslatorTest extends \TYPO3\Flow\Tests\UnitTestCase
         $this->assertEquals('Formatted and translated label', $result);
     }
 
+
+    /**
+     * @test
+     */
+    public function translateByOriginalLabelReturnsTranslationWithResolvedSingleStringPlaceholders()
+    {
+        $mockTranslationProvider = $this->getAccessibleMock('TYPO3\Flow\I18n\TranslationProvider\XliffTranslationProvider');
+        $mockTranslationProvider->expects($this->once())->method('getTranslationByOriginalLabel')->with('Translated {0} label', $this->defaultLocale, null, 'source', 'packageKey')->will($this->returnValue('Translated {0} label'));
+
+        $mockFormatResolver = $this->getMock('TYPO3\Flow\I18n\FormatResolver');
+        $mockFormatResolver->expects($this->once())->method('resolvePlaceholders')->with('Translated {0} label', array('foo'), $this->defaultLocale)->will($this->returnValue('Translated foo label'));
+
+        $mockPluralsReader = $this->getMock('TYPO3\Flow\I18n\Cldr\Reader\PluralsReader');
+        $mockPluralsReader->expects($this->never())->method('getPluralForm');
+
+        $this->translator->injectTranslationProvider($mockTranslationProvider);
+        $this->translator->injectFormatResolver($mockFormatResolver);
+        $this->translator->injectPluralsReader($mockPluralsReader);
+
+        $result = $this->translator->translateByOriginalLabel('Translated {0} label', array('foo'), null, null, 'source', 'packageKey');
+        $this->assertEquals('Translated foo label', $result);
+    }
+
+    /**
+     * @test
+     */
+    public function translateByOriginalLabelReturnsTranslationWithResolvedMultipleStringPlaceholders()
+    {
+        $mockTranslationProvider = $this->getAccessibleMock('TYPO3\Flow\I18n\TranslationProvider\XliffTranslationProvider');
+        $mockTranslationProvider->expects($this->once())->method('getTranslationByOriginalLabel')->with('Second {0} label {1}', $this->defaultLocale, null, 'source', 'packageKey')->will($this->returnValue('Second {0} label {1}'));
+
+        $mockFormatResolver = $this->getMock('TYPO3\Flow\I18n\FormatResolver');
+        $mockFormatResolver->expects($this->once())->method('resolvePlaceholders')->with('Second {0} label {1}', array('foo', 'baz'), $this->defaultLocale)->will($this->returnValue('Second foo label baz'));
+
+        $mockPluralsReader = $this->getMock('TYPO3\Flow\I18n\Cldr\Reader\PluralsReader');
+        $mockPluralsReader->expects($this->never())->method('getPluralForm');
+
+        $this->translator->injectTranslationProvider($mockTranslationProvider);
+        $this->translator->injectFormatResolver($mockFormatResolver);
+        $this->translator->injectPluralsReader($mockPluralsReader);
+
+        $result = $this->translator->translateByOriginalLabel('Second {0} label {1}', array('foo', 'baz'), null, null, 'source', 'packageKey');
+        $this->assertEquals('Second foo label baz', $result);
+    }
+
     /**
      * @test
      */
